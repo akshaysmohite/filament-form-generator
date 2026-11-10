@@ -125,7 +125,7 @@ class CodeGenerator
                 return $this->renderDatePicker($node, $className, $indent, $methodIndent);
 
             default:
-                return $indent . "{$className}::make('" . ($node['name'] ?? 'field') . "')";
+                return $indent . "{$className}::make(" . $this->phpString($node['name'] ?? 'field') . ")";
         }
     }
 
@@ -139,7 +139,7 @@ class CodeGenerator
         }
 
         if (!empty($node['icon'])) {
-            $lines[] = "{$mIndent}->icon('{$node['icon']}')";
+            $lines[] = "{$mIndent}->icon(" . $this->phpString($node['icon']) . ")";
         }
 
         if (!empty($node['collapsible'])) {
@@ -208,8 +208,7 @@ class CodeGenerator
 
     protected function renderTextInput(array $node, string $class, string $indent, string $mIndent): string
     {
-        $name = $node['name'] ?? 'text_field';
-        $lines = ["{$indent}{$class}::make('{$name}')"];
+        $lines = ["{$indent}{$class}::make(" . $this->phpString($node['name'] ?? 'text_field') . ")"];
 
         $this->appendCommonFieldModifiers($node, $lines, $mIndent);
 
@@ -219,11 +218,11 @@ class CodeGenerator
             $lines[] = "{$mIndent}->email()";
         } elseif ($subType === 'numeric') {
             $lines[] = "{$mIndent}->numeric()";
-            if (isset($node['minValue']) && $node['minValue'] !== '') {
-                $lines[] = "{$mIndent}->minValue({$node['minValue']})";
+            if (isset($node['minValue']) && is_numeric($node['minValue'])) {
+                $lines[] = "{$mIndent}->minValue(" . (0 + $node['minValue']) . ")";
             }
-            if (isset($node['maxValue']) && $node['maxValue'] !== '') {
-                $lines[] = "{$mIndent}->maxValue({$node['maxValue']})";
+            if (isset($node['maxValue']) && is_numeric($node['maxValue'])) {
+                $lines[] = "{$mIndent}->maxValue(" . (0 + $node['maxValue']) . ")";
             }
         } elseif ($subType === 'password') {
             $lines[] = "{$mIndent}->password()";
@@ -257,8 +256,7 @@ class CodeGenerator
 
     protected function renderTextarea(array $node, string $class, string $indent, string $mIndent): string
     {
-        $name = $node['name'] ?? 'textarea_field';
-        $lines = ["{$indent}{$class}::make('{$name}')"];
+        $lines = ["{$indent}{$class}::make(" . $this->phpString($node['name'] ?? 'textarea_field') . ")"];
 
         $this->appendCommonFieldModifiers($node, $lines, $mIndent);
 
@@ -277,8 +275,7 @@ class CodeGenerator
 
     protected function renderSelect(array $node, string $class, string $indent, string $mIndent, int $level): string
     {
-        $name = $node['name'] ?? 'select_field';
-        $lines = ["{$indent}{$class}::make('{$name}')"];
+        $lines = ["{$indent}{$class}::make(" . $this->phpString($node['name'] ?? 'select_field') . ")"];
 
         $this->appendCommonFieldModifiers($node, $lines, $mIndent);
 
@@ -315,21 +312,20 @@ class CodeGenerator
 
     protected function renderToggle(array $node, string $class, string $indent, string $mIndent): string
     {
-        $name = $node['name'] ?? 'toggle_field';
-        $lines = ["{$indent}{$class}::make('{$name}')"];
+        $lines = ["{$indent}{$class}::make(" . $this->phpString($node['name'] ?? 'toggle_field') . ")"];
 
         $this->appendCommonFieldModifiers($node, $lines, $mIndent);
 
         if (!empty($node['onIcon'])) {
-            $lines[] = "{$mIndent}->onIcon('{$node['onIcon']}')";
+            $lines[] = "{$mIndent}->onIcon(" . $this->phpString($node['onIcon']) . ")";
         }
 
         if (!empty($node['offIcon'])) {
-            $lines[] = "{$mIndent}->offIcon('{$node['offIcon']}')";
+            $lines[] = "{$mIndent}->offIcon(" . $this->phpString($node['offIcon']) . ")";
         }
 
         if (!empty($node['onColor'])) {
-            $lines[] = "{$mIndent}->onColor('{$node['onColor']}')";
+            $lines[] = "{$mIndent}->onColor(" . $this->phpString($node['onColor']) . ")";
         }
 
         if (isset($node['inline']) && $node['inline'] === false) {
@@ -343,8 +339,7 @@ class CodeGenerator
 
     protected function renderCheckbox(array $node, string $class, string $indent, string $mIndent): string
     {
-        $name = $node['name'] ?? 'checkbox_field';
-        $lines = ["{$indent}{$class}::make('{$name}')"];
+        $lines = ["{$indent}{$class}::make(" . $this->phpString($node['name'] ?? 'checkbox_field') . ")"];
 
         $this->appendCommonFieldModifiers($node, $lines, $mIndent);
         $this->appendCommonLayoutModifiers($node, $lines, $mIndent);
@@ -354,8 +349,7 @@ class CodeGenerator
 
     protected function renderRadio(array $node, string $class, string $indent, string $mIndent, int $level): string
     {
-        $name = $node['name'] ?? 'radio_field';
-        $lines = ["{$indent}{$class}::make('{$name}')"];
+        $lines = ["{$indent}{$class}::make(" . $this->phpString($node['name'] ?? 'radio_field') . ")"];
 
         $this->appendCommonFieldModifiers($node, $lines, $mIndent);
 
@@ -383,8 +377,7 @@ class CodeGenerator
 
     protected function renderDatePicker(array $node, string $class, string $indent, string $mIndent): string
     {
-        $name = $node['name'] ?? 'date_field';
-        $lines = ["{$indent}{$class}::make('{$name}')"];
+        $lines = ["{$indent}{$class}::make(" . $this->phpString($node['name'] ?? 'date_field') . ")"];
 
         $this->appendCommonFieldModifiers($node, $lines, $mIndent);
 
@@ -393,7 +386,7 @@ class CodeGenerator
         }
 
         if (!empty($node['displayFormat'])) {
-            $lines[] = "{$mIndent}->displayFormat('{$node['displayFormat']}')";
+            $lines[] = "{$mIndent}->displayFormat(" . $this->phpString($node['displayFormat']) . ")";
         }
 
         $this->appendCommonLayoutModifiers($node, $lines, $mIndent);
@@ -445,6 +438,11 @@ class CodeGenerator
                 $lines[] = "{$mIndent}->columnSpan(" . (int) $node['columnSpan'] . ")";
             }
         }
+    }
+
+    protected function phpString(mixed $value): string
+    {
+        return var_export((string) $value, true);
     }
 
     protected function resolveClassName(string $type): string

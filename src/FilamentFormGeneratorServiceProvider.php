@@ -2,6 +2,8 @@
 
 namespace Akshay\FilamentFormGenerator;
 
+use Filament\Support\Assets\AlpineComponent;
+use Filament\Support\Facades\FilamentAsset;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -15,6 +17,13 @@ class FilamentFormGeneratorServiceProvider extends PackageServiceProvider
             ->name(static::$name)
             ->hasConfigFile()
             ->hasViews();
+    }
+
+    public function packageBooted(): void
+    {
+        FilamentAsset::register([
+            AlpineComponent::make('form-generator', __DIR__ . '/../resources/js/form-generator.js'),
+        ], package: 'akshay/filament-form-generator');
     }
 
     public function packageRegistered(): void

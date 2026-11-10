@@ -31,7 +31,7 @@ To use this plugin locally in an existing Laravel Filament project:
 "repositories": [
     {
         "type": "path",
-        "url": "../form-builder"
+        "url": "../form-generator"
     }
 ],
 "require": {

@@ -3,14 +3,22 @@
 namespace Akshay\FilamentFormGenerator\Pages;
 
 use Filament\Pages\Page;
+use Filament\Support\Enums\MaxWidth;
 use Akshay\FilamentFormGenerator\FilamentFormGeneratorPlugin;
 use Akshay\FilamentFormGenerator\Services\CodeGenerator;
+use Illuminate\Contracts\Support\Htmlable;
+use Livewire\Attributes\Renderless;
 
 class FormGeneratorPage extends Page
 {
     protected static string $view = 'filament-form-generator::pages.form-generator';
 
     protected static ?string $slug = 'form-generator';
+
+    public function getMaxContentWidth(): MaxWidth | string | null
+    {
+        return MaxWidth::Full;
+    }
 
     public static function canAccess(): bool
     {
@@ -31,7 +39,7 @@ class FormGeneratorPage extends Page
         }
     }
 
-    public static function getNavigationIcon(): string
+    public static function getNavigationIcon(): string | Htmlable | null
     {
         try {
             return FilamentFormGeneratorPlugin::get()->getNavigationIcon();
@@ -64,12 +72,17 @@ class FormGeneratorPage extends Page
     }
 
     /**
-     * Server-side Code Generation endpoint (optional bridge for Livewire)
+     * Renderless so Livewire does not morph the Alpine canvas on every keystroke.
      */
-    public function generatePhpCode(array $nodes): string
+    #[Renderless]
+    public function generateCode(array $nodes, bool $wrapInMethod = false, bool $useFqcn = false): string
     {
-        $generator = app(CodeGenerator::class);
-        return $generator->generate($nodes);
+        $generator = new CodeGenerator(
+            importStyle: $useFqcn ? 'fqcn' : 'imported',
+            indentSpaces: (int) config('filament-form-generator.code_generation.indent_spaces', 4),
+        );
+
+        return $generator->generate($nodes, $wrapInMethod);
     }
 }
 
