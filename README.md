@@ -2,36 +2,54 @@
 
 A developer-focused, visual drag-and-drop form schema builder and code generator for **Filament v3**.
 
-Build complex, production-ready form schemas visually in seconds and copy-paste clean, idiomatic Filament PHP code (`Forms\Components\...`) directly into your Resources, Pages, or Livewire components.
+Build form schemas visually and copy clean Filament PHP (`Forms\Components\...`) into your Resources, Pages, or Livewire components.
+
+---
+
+## Requirements
+
+| Package | Version |
+|--------|---------|
+| **PHP** | 8.1, 8.2, or 8.3 |
+| **Laravel** | 10.x or 11.x |
+| **Filament** | **3.2+** (tested on 3.3.x) |
+
+This release targets **Filament 3 only** (not Filament 4 or 5).
 
 ---
 
 ## Features
 
-- 🎨 **Visual Drag-and-Drop Canvas:** Drag, reorder, nest, and duplicate form components with instant visual feedback.
-- 📦 **Layout Containers:** Full support for `Section` (with title, description, collapsible, columns) and `Grid`.
-- 🧩 **Core Form Fields:** `TextInput` (with email, numeric, password, tel, url subtypes), `Textarea`, `Select` (dynamic options), `Toggle`, `Checkbox`, `Radio`, and `DatePicker`.
-- ⚙️ **Properties Inspector:** Live-edit labels, field names, placeholders, helper texts, required rules, disabled state, column spans, and options lists.
-- 💻 **Zero-Latency PHP Code Exporter:** Outputs PSR-12 formatted Filament PHP code in real-time.
-  - Option to output pure array schema `[...]` or wrapped in `public static function form(Form $form): Form`.
-  - Toggle between imported classes (`TextInput::make()`) and FQCN (`Forms\Components\TextInput::make()`).
-  - 1-click **Copy to Clipboard**.
-- 📋 **JSON Schema Import & Export:** Save form designs to JSON and reload them anytime.
-- ⚡ **Starter Templates:** One-click pre-built schemas for User Profile, Contact Form, and E-Commerce Product.
+- Visual drag-and-drop canvas with reordering and nesting
+- Layout containers: `Section`, `Grid`
+- Fields: `TextInput` (text, email, numeric, password, tel, url), `Textarea`, `Select`, `Toggle`, `Checkbox`, `Radio`, `DatePicker`
+- Properties inspector for labels, names, validation, column span, and options
+- PHP code export (array schema or full `form()` method; imported classes or FQCN)
+- Copy to clipboard, JSON import/export, full-screen workspace
+- Restricted to `local` / `testing` by default (configurable)
 
 ---
 
 ## Installation
 
-### For Local Plugin Development
-To use this plugin locally in an existing Laravel Filament project:
+### Packagist (production)
 
-1. Add the path repository to your Laravel project's `composer.json`:
+```bash
+composer require akshay/filament-form-generator
+```
+
+### Path repository (local development)
+
+In your Laravel app `composer.json`:
+
 ```json
 "repositories": [
     {
         "type": "path",
-        "url": "../form-generator"
+        "url": "../form-generator",
+        "options": {
+            "symlink": true
+        }
     }
 ],
 "require": {
@@ -39,13 +57,20 @@ To use this plugin locally in an existing Laravel Filament project:
 }
 ```
 
-2. Run `composer update akshay/filament-form-generator`.
+Then:
+
+```bash
+composer update akshay/filament-form-generator
+php artisan filament:assets
+```
+
+Publish assets whenever you upgrade the plugin or change its JavaScript.
 
 ---
 
-## Register in Your Panel
+## Register in your panel
 
-Add `FilamentFormGeneratorPlugin` to your panel provider (e.g. `app/Providers/Filament/AdminPanelProvider.php`):
+In `app/Providers/Filament/AdminPanelProvider.php` (or your panel provider):
 
 ```php
 use Akshay\FilamentFormGenerator\FilamentFormGeneratorPlugin;
@@ -53,8 +78,6 @@ use Akshay\FilamentFormGenerator\FilamentFormGeneratorPlugin;
 public function panel(Panel $panel): Panel
 {
     return $panel
-        ->default()
-        ->id('admin')
         // ...
         ->plugins([
             FilamentFormGeneratorPlugin::make()
@@ -65,19 +88,19 @@ public function panel(Panel $panel): Panel
 }
 ```
 
-Visit your panel and click on **Form Generator** in the sidebar.
+Open your panel and use **Form Generator** in the sidebar.
 
 ---
 
-## Configuration & Environment Protection
+## Configuration
 
-Publish the configuration file (optional):
+Optional config publish:
 
 ```bash
 php artisan vendor:publish --tag="filament-form-generator-config"
 ```
 
-By default, the generator is restricted to `local` and `testing` environments:
+By default the page is only available in `local` and `testing`:
 
 ```php
 // config/filament-form-generator.php
@@ -87,18 +110,16 @@ By default, the generator is restricted to `local` and `testing` environments:
 ],
 ```
 
-You can also customize authorization dynamically in your panel provider:
+Allow all environments with `['*']`, or gate access in the panel provider:
 
 ```php
 FilamentFormGeneratorPlugin::make()
-    ->authorize(fn () => auth()->user()?->isSuperAdmin()),
+    ->authorize(fn () => auth()->user()?->isSuperAdmin());
 ```
 
 ---
 
-## Running Tests
-
-Run the standalone unit test suite:
+## Tests
 
 ```bash
 php tests/CodeGeneratorTest.php
@@ -108,5 +129,4 @@ php tests/CodeGeneratorTest.php
 
 ## License
 
-The MIT License (MIT).
-
+MIT

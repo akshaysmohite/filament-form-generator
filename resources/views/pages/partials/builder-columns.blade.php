@@ -37,7 +37,7 @@
             <x-filament::icon icon="heroicon-o-cursor-arrow-rays" class="h-6 w-6" />
         </div>
         <p class="text-sm font-medium text-gray-950 dark:text-gray-200">This form is empty</p>
-        <p class="mt-1 max-w-xs text-sm text-gray-500">Add a component from the left, or start from a template.</p>
+        <p class="mt-1 max-w-xs text-sm text-gray-500">Add a component from the toolbox on the left.</p>
     </div>
 
     <div class="flex flex-col gap-3">
@@ -62,11 +62,11 @@
                                 <div class="text-sm font-semibold text-gray-950 dark:text-gray-100" x-text="node.type === 'Grid' ? ((node.columns || 2) + ' columns') : (node.title || 'Section')"></div>
                                 <div x-show="node.description" class="mt-0.5 text-xs text-gray-500" x-text="node.description"></div>
                             </div>
-                            <div class="flex shrink-0 items-center gap-1">
-                                <button type="button" @click.stop="duplicateNode(node.id)" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700" title="Duplicate">
+                            <div class="fg-field-actions flex shrink-0 items-center gap-0.5">
+                                <button type="button" @click.stop="duplicateNode(node.id)" class="rounded-md p-1" title="Duplicate">
                                     <x-filament::icon icon="heroicon-o-document-duplicate" class="h-4 w-4" />
                                 </button>
-                                <button type="button" @click.stop="deleteNode(node.id)" class="rounded-lg p-1.5 text-gray-400 hover:bg-danger-50 hover:text-danger-600" title="Delete">
+                                <button type="button" @click.stop="deleteNode(node.id)" class="fg-delete-btn rounded-md p-1" title="Delete">
                                     <x-filament::icon icon="heroicon-o-trash" class="h-4 w-4" />
                                 </button>
                             </div>

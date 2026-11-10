@@ -1,3 +1,148 @@
+function fgPhpString(value) {
+    if (value === null || value === undefined) {
+        return "''";
+    }
+
+    return "'" + String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+}
+
+function fgCollectTypes(nodes, bucket) {
+    for (const node of nodes) {
+        bucket.add(node.type);
+        if (node.children?.length) {
+            fgCollectTypes(node.children, bucket);
+        }
+    }
+}
+
+function fgRenderModifiers(node, level, indentUnit) {
+    const mIndent = indentUnit.repeat(level + 1);
+    const lines = [];
+
+    if (node.label) lines.push(`${mIndent}->label(${fgPhpString(node.label)})`);
+    if (node.placeholder) lines.push(`${mIndent}->placeholder(${fgPhpString(node.placeholder)})`);
+    if (node.helperText) lines.push(`${mIndent}->helperText(${fgPhpString(node.helperText)})`);
+    if (node.required) lines.push(`${mIndent}->required()`);
+    if (node.disabled) lines.push(`${mIndent}->disabled()`);
+    if (node.readOnly) lines.push(`${mIndent}->readOnly()`);
+    if (node.default !== undefined && node.default !== '') {
+        lines.push(`${mIndent}->default(${fgPhpString(node.default)})`);
+    }
+    if (node.columnSpan === 'full') {
+        lines.push(`${mIndent}->columnSpanFull()`);
+    } else if (node.columnSpan && parseInt(node.columnSpan, 10) > 1) {
+        lines.push(`${mIndent}->columnSpan(${parseInt(node.columnSpan, 10)})`);
+    }
+
+    return lines;
+}
+
+function fgRenderNode(node, level, indentUnit, useFqcn) {
+    const indent = indentUnit.repeat(level);
+    const mIndent = indentUnit.repeat(level + 1);
+    const cls = useFqcn ? `Forms\\Components\\${node.type}` : node.type;
+
+    if (node.type === 'Section') {
+        const lines = [`${indent}${cls}::make(${fgPhpString(node.title || 'Section')})`];
+        if (node.description) lines.push(`${mIndent}->description(${fgPhpString(node.description)})`);
+        if (node.collapsible) {
+            lines.push(`${mIndent}->collapsible()`);
+            if (node.collapsed) lines.push(`${mIndent}->collapsed()`);
+        }
+        if (node.columns && parseInt(node.columns, 10) > 1) {
+            lines.push(`${mIndent}->columns(${parseInt(node.columns, 10)})`);
+        }
+
+        const children = node.children?.length
+            ? fgRenderNodeList(node.children, level + 2, indentUnit, useFqcn)
+            : '';
+        lines.push(children ? `${mIndent}->schema([\n${children}\n${mIndent}])` : `${mIndent}->schema([])`);
+        return lines.join('\n');
+    }
+
+    if (node.type === 'Grid') {
+        const lines = [`${indent}${cls}::make(${parseInt(node.columns, 10) || 2})`];
+        const children = node.children?.length
+            ? fgRenderNodeList(node.children, level + 2, indentUnit, useFqcn)
+            : '';
+        lines.push(children ? `${mIndent}->schema([\n${children}\n${mIndent}])` : `${mIndent}->schema([])`);
+        return lines.join('\n');
+    }
+
+    const lines = [`${indent}${cls}::make(${fgPhpString(node.name || 'field')})`];
+    lines.push(...fgRenderModifiers(node, level, indentUnit));
+
+    if (node.type === 'TextInput') {
+        const subType = node.subType || 'text';
+        if (subType === 'email') lines.push(`${mIndent}->email()`);
+        if (subType === 'numeric') lines.push(`${mIndent}->numeric()`);
+        if (subType === 'password') {
+            lines.push(`${mIndent}->password()`);
+            lines.push(`${mIndent}->revealable()`);
+        }
+        if (subType === 'tel') lines.push(`${mIndent}->tel()`);
+        if (subType === 'url') lines.push(`${mIndent}->url()`);
+    }
+
+    if (node.type === 'Textarea' && node.rows) {
+        lines.push(`${mIndent}->rows(${parseInt(node.rows, 10)})`);
+    }
+
+    if ((node.type === 'Select' || node.type === 'Radio') && node.options?.length) {
+        const optIndent = indentUnit.repeat(level + 2);
+        const optLines = node.options.map(
+            (opt) => `${optIndent}${fgPhpString(opt.value)} => ${fgPhpString(opt.label)}`,
+        );
+        lines.push(`${mIndent}->options([\n${optLines.join(',\n')},\n${mIndent}])`);
+    }
+
+    if (node.type === 'Select' && node.searchable) lines.push(`${mIndent}->searchable()`);
+    if (node.type === 'Radio' && node.inline) lines.push(`${mIndent}->inline()`);
+
+    return lines.join('\n');
+}
+
+function fgRenderNodeList(nodes, level, indentUnit, useFqcn) {
+    return nodes.map((node) => fgRenderNode(node, level, indentUnit, useFqcn)).join(',\n\n');
+}
+
+function generateCodeLocal(nodes, wrapInMethod = false, useFqcn = false) {
+    if (!nodes?.length) {
+        return "// No components added yet.\n// Drag and drop components from the palette into the canvas.";
+    }
+
+    const indentUnit = '    ';
+    const baseLevel = wrapInMethod ? 2 : 1;
+    const schemaCode = fgRenderNodeList(nodes, baseLevel, indentUnit, useFqcn);
+
+    if (!wrapInMethod) {
+        let header = '';
+        if (!useFqcn) {
+            const types = new Set();
+            fgCollectTypes(nodes, types);
+            header = [...types].sort().map((type) => `use Filament\\Forms\\Components\\${type};`).join('\n') + '\n\n';
+        }
+        return `${header}[\n${schemaCode}\n]`;
+    }
+
+    let header = "use Filament\\Forms;\nuse Filament\\Forms\\Form;\n";
+    if (!useFqcn) {
+        const types = new Set();
+        fgCollectTypes(nodes, types);
+        header += [...types].sort().map((type) => `use Filament\\Forms\\Components\\${type};`).join('\n') + '\n';
+    }
+
+    return `${header}
+public static function form(Form $form): Form
+{
+    return $form
+        ->schema([
+${schemaCode}
+        ]);
+}
+`;
+}
+
 export default function formGenerator() {
     return {
         activeTab: 'canvas',
@@ -9,6 +154,9 @@ export default function formGenerator() {
         generatedCode: '',
         jsonDraft: '',
         codeToken: 0,
+        codeLoading: false,
+        isFullscreen: false,
+        immersive: false,
 
         codeSettings: {
             wrapInMethod: false,
@@ -90,14 +238,68 @@ export default function formGenerator() {
         nodes: [],
 
         init() {
-            this.loadTemplate('user');
+            this.nodes = [];
 
-            window.Alpine.effect(() => {
-                JSON.stringify(this.nodes);
-                this.codeSettings.wrapInMethod;
-                this.codeSettings.useFqcn;
-                this.queueCodeRefresh();
-            });
+            this._syncFullscreen = () => this.syncFullscreenState();
+            document.addEventListener('fullscreenchange', this._syncFullscreen);
+
+            this.$watch('nodes', () => this.queueCodeRefresh(), { deep: true });
+            this.$watch('codeSettings', () => this.queueCodeRefresh(), { deep: true });
+            this.queueCodeRefresh();
+        },
+
+        resolveLivewire() {
+            if (this.$wire?.generateCode) {
+                return this.$wire;
+            }
+
+            const host = this.$el?.closest('[wire\\:id]');
+            const id = host?.getAttribute('wire:id');
+            if (id && window.Livewire?.find) {
+                const component = window.Livewire.find(id);
+                if (component?.generateCode) {
+                    return component;
+                }
+            }
+
+            return null;
+        },
+
+        syncFullscreenState() {
+            const el = this.$refs.workspace;
+            this.isFullscreen = !!el && (document.fullscreenElement === el || this.immersive);
+        },
+
+        async toggleFullscreen() {
+            const el = this.$refs.workspace;
+            if (!el) {
+                return;
+            }
+
+            if (document.fullscreenElement === el) {
+                await document.exitFullscreen();
+                this.syncFullscreenState();
+                return;
+            }
+
+            if (this.immersive) {
+                this.immersive = false;
+                this.syncFullscreenState();
+                return;
+            }
+
+            if (typeof el.requestFullscreen === 'function') {
+                try {
+                    await el.requestFullscreen();
+                    this.syncFullscreenState();
+                    return;
+                } catch (error) {
+                    // Fall back to in-page immersive layout when the browser blocks native fullscreen.
+                }
+            }
+
+            this.immersive = true;
+            this.syncFullscreenState();
         },
 
         get selectedNode() {
@@ -115,21 +317,32 @@ export default function formGenerator() {
 
         async refreshCode() {
             const token = ++this.codeToken;
+            this.codeLoading = true;
+
+            const payload = JSON.parse(JSON.stringify(this.nodes));
+            const wrapInMethod = !!this.codeSettings.wrapInMethod;
+            const useFqcn = !!this.codeSettings.useFqcn;
+            let code = '';
 
             try {
-                const code = await this.$wire.generateCode(
-                    JSON.parse(JSON.stringify(this.nodes)),
-                    !!this.codeSettings.wrapInMethod,
-                    !!this.codeSettings.useFqcn,
-                );
-
-                if (token === this.codeToken) {
-                    this.generatedCode = code;
+                const wire = this.resolveLivewire();
+                if (wire) {
+                    const response = await wire.generateCode(payload, wrapInMethod, useFqcn);
+                    if (typeof response === 'string' && response.length) {
+                        code = response;
+                    }
                 }
             } catch (error) {
-                if (token === this.codeToken) {
-                    this.generatedCode = '// Unable to generate PHP code.';
-                }
+                // Fall back to browser-side generation below.
+            }
+
+            if (!code) {
+                code = generateCodeLocal(payload, wrapInMethod, useFqcn);
+            }
+
+            if (token === this.codeToken) {
+                this.generatedCode = code;
+                this.codeLoading = false;
             }
         },
 
@@ -155,9 +368,9 @@ export default function formGenerator() {
             this.selectedNodeId = id;
         },
 
-        showCodeTab() {
+        async showCodeTab() {
             this.activeTab = 'code';
-            this.refreshCode();
+            await this.refreshCode();
         },
 
         showJsonTab() {
@@ -462,154 +675,5 @@ export default function formGenerator() {
                 });
         },
 
-        loadTemplate(name) {
-            if (name === 'user') {
-                this.nodes = [
-                    {
-                        id: 'sec_1',
-                        type: 'Section',
-                        title: 'Personal Information',
-                        description: 'Basic profile information for the user.',
-                        columns: 2,
-                        children: [
-                            {
-                                id: 'f_1',
-                                type: 'TextInput',
-                                subType: 'text',
-                                name: 'first_name',
-                                label: 'First Name',
-                                required: true,
-                                columnSpan: '1'
-                            },
-                            {
-                                id: 'f_2',
-                                type: 'TextInput',
-                                subType: 'text',
-                                name: 'last_name',
-                                label: 'Last Name',
-                                required: true,
-                                columnSpan: '1'
-                            },
-                            {
-                                id: 'f_3',
-                                type: 'TextInput',
-                                subType: 'email',
-                                name: 'email',
-                                label: 'Email Address',
-                                required: true,
-                                columnSpan: 'full'
-                            }
-                        ]
-                    },
-                    {
-                        id: 'sec_2',
-                        type: 'Section',
-                        title: 'Role & Status',
-                        columns: 2,
-                        children: [
-                            {
-                                id: 'f_4',
-                                type: 'Select',
-                                name: 'role',
-                                label: 'User Role',
-                                required: true,
-                                options: [
-                                    { value: 'admin', label: 'Administrator' },
-                                    { value: 'editor', label: 'Editor' },
-                                    { value: 'user', label: 'Standard User' }
-                                ]
-                            },
-                            {
-                                id: 'f_5',
-                                type: 'Toggle',
-                                name: 'is_active',
-                                label: 'Account Active',
-                                default: true
-                            }
-                        ]
-                    }
-                ];
-            } else if (name === 'contact') {
-                this.nodes = [
-                    {
-                        id: 'f_c1',
-                        type: 'TextInput',
-                        name: 'name',
-                        label: 'Your Name',
-                        required: true
-                    },
-                    {
-                        id: 'f_c2',
-                        type: 'TextInput',
-                        subType: 'email',
-                        name: 'email',
-                        label: 'Email',
-                        required: true
-                    },
-                    {
-                        id: 'f_c3',
-                        type: 'Select',
-                        name: 'department',
-                        label: 'Department',
-                        options: [
-                            { value: 'support', label: 'Customer Support' },
-                            { value: 'sales', label: 'Sales & Billing' }
-                        ]
-                    },
-                    {
-                        id: 'f_c4',
-                        type: 'Textarea',
-                        name: 'message',
-                        label: 'Message',
-                        rows: 4,
-                        required: true,
-                        columnSpan: 'full'
-                    }
-                ];
-            } else if (name === 'product') {
-                this.nodes = [
-                    {
-                        id: 'sec_p1',
-                        type: 'Section',
-                        title: 'Product Details',
-                        columns: 2,
-                        children: [
-                            {
-                                id: 'p_1',
-                                type: 'TextInput',
-                                name: 'title',
-                                label: 'Product Title',
-                                required: true,
-                                columnSpan: 'full'
-                            },
-                            {
-                                id: 'p_2',
-                                type: 'TextInput',
-                                subType: 'numeric',
-                                name: 'price',
-                                label: 'Price ($)',
-                                required: true
-                            },
-                            {
-                                id: 'p_3',
-                                type: 'TextInput',
-                                subType: 'numeric',
-                                name: 'sku',
-                                label: 'SKU / Barcode'
-                            },
-                            {
-                                id: 'p_4',
-                                type: 'Textarea',
-                                name: 'description',
-                                label: 'Description',
-                                columnSpan: 'full'
-                            }
-                        ]
-                    }
-                ];
-            }
-
-            this.selectedNodeId = null;
-        },
     };
 }

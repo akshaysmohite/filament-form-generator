@@ -1,10 +1,13 @@
 <x-filament-panels::page>
+    <div wire:ignore>
     <div
-        wire:ignore
         x-load
         x-load-src="{{ \Filament\Support\Facades\FilamentAsset::getAlpineComponentSrc('form-generator', 'akshay/filament-form-generator') }}"
         x-data="formGenerator()"
-        class="flex flex-col gap-4 font-sans text-gray-950 dark:text-gray-100"
+        x-ref="workspace"
+        x-bind:class="{ 'fg-immersive': immersive }"
+        @keydown.escape.window="if (immersive) { immersive = false }"
+        class="fg-workspace flex flex-col gap-4 font-sans text-gray-950 dark:text-gray-100"
     >
         <style>
             .fg-builder { display: grid; grid-template-columns: 1fr; }
@@ -12,6 +15,46 @@
                 .fg-builder { grid-template-columns: 248px minmax(0, 1fr) 292px; }
                 .fg-side { border-right: 1px solid #e5e7eb; border-bottom: 0; }
                 .fg-inspector { border-left: 1px solid #e5e7eb; border-top: 0; }
+            }
+            .fg-workspace:fullscreen,
+            .fg-workspace:-webkit-full-screen {
+                box-sizing: border-box;
+                width: 100%;
+                height: 100%;
+                padding: 1rem 1.25rem 1.25rem;
+                overflow: auto;
+                background-color: #f3f4f6;
+            }
+            .dark .fg-workspace:fullscreen,
+            .dark .fg-workspace:-webkit-full-screen {
+                background-color: #030712;
+            }
+            .fg-workspace:fullscreen .fg-builder,
+            .fg-workspace:-webkit-full-screen .fg-builder {
+                min-height: calc(100vh - 7.5rem);
+            }
+            .fg-workspace:fullscreen .fg-canvas,
+            .fg-workspace:-webkit-full-screen .fg-canvas,
+            .fg-immersive .fg-canvas {
+                min-height: calc(100vh - 10rem);
+            }
+            @media (min-width: 1180px) {
+                .fg-workspace:fullscreen .fg-builder,
+                .fg-workspace:-webkit-full-screen .fg-builder,
+                .fg-immersive .fg-builder {
+                    grid-template-columns: 272px minmax(0, 1fr) 320px;
+                }
+            }
+            .fg-immersive {
+                position: fixed;
+                inset: 0;
+                z-index: 120;
+                padding: 1rem 1.25rem 1.25rem;
+                overflow: auto;
+                background-color: #f3f4f6;
+            }
+            .dark .fg-immersive {
+                background-color: #030712;
             }
             .fg-canvas { min-height: 36rem; padding: 1.25rem 1.5rem; }
             .fg-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
@@ -22,6 +65,74 @@
             .fg-drop { border-style: dashed; }
             .fg-area { min-height: 4.75rem; }
             .fg-switch-knob { position: absolute; top: 2px; right: 2px; height: 1.25rem; width: 1.25rem; border-radius: 9999px; background: #fff; }
+            .fg-code-panel {
+                min-height: 12rem;
+                padding: 1rem;
+                border-radius: 0.75rem;
+                border: 1px solid #374151;
+                background-color: #111827;
+                overflow-x: auto;
+            }
+            .fg-code-panel pre {
+                margin: 0;
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+                font-size: 0.75rem;
+                line-height: 1.6;
+                white-space: pre-wrap;
+                word-break: break-word;
+            }
+            .fg-code-panel code,
+            .fg-code-panel pre {
+                color: #a7f3d0;
+            }
+            .fg-code-panel .fg-hint {
+                color: #9ca3af;
+                font-size: 0.75rem;
+            }
+            .fg-json-panel {
+                padding: 1rem;
+                border-radius: 0.75rem;
+                border: 1px solid #374151;
+                background-color: #111827;
+            }
+            .fg-json-panel textarea {
+                width: 100%;
+                min-height: 16rem;
+                border: 0;
+                background: transparent;
+                color: #a7f3d0;
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+                font-size: 0.75rem;
+                line-height: 1.6;
+                resize: vertical;
+            }
+            .fg-json-panel textarea:focus {
+                outline: none;
+                box-shadow: none;
+            }
+            .fg-field-row {
+                align-items: flex-start;
+            }
+            .fg-field-actions button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border: 0;
+                background: transparent;
+                cursor: pointer;
+                color: #6b7280;
+            }
+            .fg-field-actions button:hover {
+                background-color: #f3f4f6;
+                color: #374151;
+            }
+            .fg-delete-btn {
+                color: #ef4444 !important;
+            }
+            .fg-delete-btn:hover {
+                background-color: #fef2f2 !important;
+                color: #dc2626 !important;
+            }
         </style>
         {{-- Top Toolbar --}}
         <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -62,49 +173,20 @@
             </div>
 
             <div class="flex items-center gap-2">
-                {{-- Quick Templates Dropdown --}}
-                <div x-data="{ open: false }" class="relative">
-                    <button 
-                        type="button" 
-                        @click="open = !open" 
-                        @click.away="open = false"
-                        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                        <x-filament::icon icon="heroicon-o-sparkles" class="w-3.5 h-3.5 text-amber-500" />
-                        <span>Templates</span>
-                        <x-filament::icon icon="heroicon-m-chevron-down" class="w-3 h-3 text-gray-400" />
-                    </button>
-                    <div 
-                        x-show="open" 
-                        x-transition 
-                        class="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 py-1 text-xs"
-                    >
-                        <button 
-                            type="button"
-                            @click="loadTemplate('user'); open = false"
-                            class="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 flex items-center gap-2"
-                        >
-                            <x-filament::icon icon="heroicon-o-user" class="w-4 h-4 text-primary-500" />
-                            <span>User Profile Form</span>
-                        </button>
-                        <button 
-                            type="button"
-                            @click="loadTemplate('contact'); open = false"
-                            class="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 flex items-center gap-2"
-                        >
-                            <x-filament::icon icon="heroicon-o-envelope" class="w-4 h-4 text-emerald-500" />
-                            <span>Contact & Feedback</span>
-                        </button>
-                        <button 
-                            type="button"
-                            @click="loadTemplate('product'); open = false"
-                            class="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 flex items-center gap-2"
-                        >
-                            <x-filament::icon icon="heroicon-o-shopping-bag" class="w-4 h-4 text-purple-500" />
-                            <span>E-Commerce Product</span>
-                        </button>
-                    </div>
-                </div>
+                <button
+                    type="button"
+                    @click="toggleFullscreen()"
+                    class="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                    :title="isFullscreen ? 'Exit full screen (Esc)' : 'Enter full screen'"
+                >
+                    <span x-show="!isFullscreen" class="inline-flex">
+                        <x-filament::icon icon="heroicon-o-arrows-pointing-out" class="h-4 w-4" />
+                    </span>
+                    <span x-show="isFullscreen" class="inline-flex" x-cloak>
+                        <x-filament::icon icon="heroicon-o-arrows-pointing-in" class="h-4 w-4" />
+                    </span>
+                    <span x-text="isFullscreen ? 'Exit full screen' : 'Full screen'"></span>
+                </button>
 
                 {{-- Copy Code Button --}}
                 <button 
@@ -375,8 +457,12 @@
                 </button>
             </div>
 
-            <div class="relative bg-gray-950 text-gray-100 rounded-xl p-4 font-mono text-xs overflow-x-auto border border-gray-800 shadow-inner">
-                <pre><code x-text="generatedCode"></code></pre>
+            <div class="fg-code-panel">
+                <p x-show="codeLoading" class="fg-hint">Generating PHP code…</p>
+                <p x-show="!codeLoading && !generatedCode" class="fg-hint">
+                    Add fields on the Visual Canvas tab, then open this tab again.
+                </p>
+                <pre x-show="!codeLoading && generatedCode"><code x-text="generatedCode"></code></pre>
             </div>
         </div>
 
@@ -398,14 +484,11 @@
                 </div>
             </div>
 
-            <div class="relative bg-gray-950 text-gray-100 rounded-xl p-4 font-mono text-xs border border-gray-800 shadow-inner">
-                <textarea 
-                    x-model="jsonDraft" 
-                    rows="16" 
-                    class="w-full bg-transparent border-0 focus:ring-0 text-emerald-400 font-mono text-xs resize-y"
-                ></textarea>
+            <div class="fg-json-panel">
+                <textarea x-model="jsonDraft" rows="16"></textarea>
             </div>
         </div>
+    </div>
     </div>
 
 </x-filament-panels::page>
