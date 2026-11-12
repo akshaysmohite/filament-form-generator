@@ -1,5 +1,5 @@
 {
-    "name": "akshay/filament-form-generator",
+    "name": "akshaysmohite/filament-form-generator",
     "type": "library",
     "description": "Visual drag-and-drop form schema builder and PHP code generator for Filament v3.2+.",
     "keywords": [
@@ -10,11 +10,11 @@
         "filament-form-generator",
         "schema-generator"
     ],
-    "homepage": "https://github.com/akshay/filament-form-generator",
+    "homepage": "https://github.com/akshaysmohite/filament-form-generator",
     "license": "MIT",
     "support": {
-        "issues": "https://github.com/akshay/filament-form-generator/issues",
-        "source": "https://github.com/akshay/filament-form-generator"
+        "issues": "https://github.com/akshaysmohite/filament-form-generator/issues",
+        "source": "https://github.com/akshaysmohite/filament-form-generator"
     },
     "authors": [
         {

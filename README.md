@@ -33,7 +33,7 @@ It generates code you paste into your app. It does not store form submissions or
 ## Installation
 
 ```bash
-composer require akshay/filament-form-generator
+composer require akshaysmohite/filament-form-generator
 php artisan filament:assets
 ```
 
@@ -96,7 +96,7 @@ This package is free while we see whether developers want a fuller builder. Pro 
 - Relationship selects
 - Conditional visibility
 
-If you would use those, open a GitHub issue titled **Pro interest** and name the fields you need. The planned price is **$19 once**, after those features exist. A Filament 4 build would be a separate release.
+If you would use those, open a GitHub issue titled **Pro interest**. Name the fields you need, and say what a one-time license would be worth to you. A Filament 4 build would be a separate release.
 
 ---
 
@@ -115,12 +115,12 @@ Point a Laravel app at this checkout:
     }
 ],
 "require": {
-    "akshay/filament-form-generator": "@dev"
+    "akshaysmohite/filament-form-generator": "@dev"
 }
 ```
 
 ```bash
-composer update akshay/filament-form-generator
+composer update akshaysmohite/filament-form-generator
 php artisan filament:assets
 ```
 

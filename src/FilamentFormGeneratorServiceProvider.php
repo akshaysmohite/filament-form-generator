@@ -23,7 +23,7 @@ class FilamentFormGeneratorServiceProvider extends PackageServiceProvider
     {
         FilamentAsset::register([
             AlpineComponent::make('filament-form-generator', __DIR__ . '/../resources/js/form-generator.js'),
-        ], package: 'akshay/filament-form-generator');
+        ], package: 'akshaysmohite/filament-form-generator');
     }
 
     public function packageRegistered(): void
