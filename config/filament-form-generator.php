@@ -6,14 +6,14 @@ return [
     | Navigation Settings
     |--------------------------------------------------------------------------
     |
-    | Configure how the Form Generator appears in your Filament panel sidebar.
+    | Configure how Filament Form Generator appears in your Filament panel sidebar.
     |
     */
     'navigation' => [
         'group' => 'Development',
         'icon' => 'heroicon-o-wrench-screwdriver',
         'sort' => 99,
-        'label' => 'Form Generator',
+        'label' => 'Filament Form Generator',
     ],
 
     /*

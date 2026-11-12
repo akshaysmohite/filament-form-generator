@@ -13,7 +13,7 @@ class FormGeneratorPage extends Page
 {
     protected static string $view = 'filament-form-generator::pages.form-generator';
 
-    protected static ?string $slug = 'form-generator';
+    protected static ?string $slug = 'filament-form-generator';
 
     public function getMaxContentWidth(): MaxWidth | string | null
     {
@@ -53,7 +53,7 @@ class FormGeneratorPage extends Page
         try {
             return FilamentFormGeneratorPlugin::get()->getNavigationLabel();
         } catch (\Throwable $e) {
-            return config('filament-form-generator.navigation.label', 'Form Generator');
+            return config('filament-form-generator.navigation.label', 'Filament Form Generator');
         }
     }
 

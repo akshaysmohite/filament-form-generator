@@ -76,7 +76,7 @@ class FilamentFormGeneratorPlugin implements Plugin
 
     public function getNavigationLabel(): string
     {
-        return $this->navigationLabel ?? config('filament-form-generator.navigation.label', 'Form Generator');
+        return $this->navigationLabel ?? config('filament-form-generator.navigation.label', 'Filament Form Generator');
     }
 
     public function navigationSort(?int $sort): static

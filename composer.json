@@ -1,16 +1,21 @@
 {
     "name": "akshay/filament-form-generator",
-    "description": "Visual drag-and-drop form schema builder and code generator for Filament v3.",
+    "type": "library",
+    "description": "Visual drag-and-drop form schema builder and PHP code generator for Filament v3.2+.",
     "keywords": [
         "laravel",
         "filament",
         "filament-plugin",
         "form-builder",
-        "form-generator",
+        "filament-form-generator",
         "schema-generator"
     ],
     "homepage": "https://github.com/akshay/filament-form-generator",
     "license": "MIT",
+    "support": {
+        "issues": "https://github.com/akshay/filament-form-generator/issues",
+        "source": "https://github.com/akshay/filament-form-generator"
+    },
     "authors": [
         {
             "name": "Akshay",

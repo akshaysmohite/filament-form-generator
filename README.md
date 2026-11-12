@@ -1,8 +1,10 @@
-# Filament Visual Form Generator Plugin
+# Filament Form Generator
 
-A developer-focused, visual drag-and-drop form schema builder and code generator for **Filament v3**.
+Visual drag-and-drop builder that writes Filament form PHP for developers. Arrange fields in the panel, then copy a `Forms\Components` schema into a Resource, Page, or Livewire component.
 
-Build form schemas visually and copy clean Filament PHP (`Forms\Components\...`) into your Resources, Pages, or Livewire components.
+**This free release supports Filament v3.2+ on Laravel 10 and 11.** Filament 4 and 5 are not part of this version.
+
+It generates code you paste into your app. It does not store form submissions or publish a public form URL.
 
 ---
 
@@ -14,63 +16,30 @@ Build form schemas visually and copy clean Filament PHP (`Forms\Components\...`)
 | **Laravel** | 10.x or 11.x |
 | **Filament** | **3.2+** (tested on 3.3.x) |
 
-This release targets **Filament 3 only** (not Filament 4 or 5).
-
 ---
 
 ## Features
 
-- Visual drag-and-drop canvas with reordering and nesting
-- Layout containers: `Section`, `Grid`
+- Drag-and-drop canvas with reordering and nesting
+- Layout: `Section`, `Grid`
 - Fields: `TextInput` (text, email, numeric, password, tel, url), `Textarea`, `Select`, `Toggle`, `Checkbox`, `Radio`, `DatePicker`
-- Properties inspector for labels, names, validation, column span, and options
-- PHP code export (array schema or full `form()` method; imported classes or FQCN)
+- Inspector for labels, names, validation, column span, and options
+- PHP export as a schema array or a full `form()` method, with imported classes or FQCN
 - Copy to clipboard, JSON import/export, full-screen workspace
-- Restricted to `local` / `testing` by default (configurable)
+- Available in `local` and `testing` by default
 
 ---
 
 ## Installation
 
-### Packagist (production)
-
 ```bash
 composer require akshay/filament-form-generator
-```
-
-### Path repository (local development)
-
-In your Laravel app `composer.json`:
-
-```json
-"repositories": [
-    {
-        "type": "path",
-        "url": "../form-generator",
-        "options": {
-            "symlink": true
-        }
-    }
-],
-"require": {
-    "akshay/filament-form-generator": "@dev"
-}
-```
-
-Then:
-
-```bash
-composer update akshay/filament-form-generator
 php artisan filament:assets
 ```
 
-Publish assets whenever you upgrade the plugin or change its JavaScript.
+Run `php artisan filament:assets` again after each upgrade so the builder script stays current.
 
----
-
-## Register in your panel
-
-In `app/Providers/Filament/AdminPanelProvider.php` (or your panel provider):
+Register the plugin in `app/Providers/Filament/AdminPanelProvider.php`:
 
 ```php
 use Akshay\FilamentFormGenerator\FilamentFormGeneratorPlugin;
@@ -83,24 +52,22 @@ public function panel(Panel $panel): Panel
             FilamentFormGeneratorPlugin::make()
                 ->navigationGroup('Development')
                 ->navigationIcon('heroicon-o-wrench-screwdriver')
-                ->navigationLabel('Form Generator'),
+                ->navigationLabel('Filament Form Generator'),
         ]);
 }
 ```
 
-Open your panel and use **Form Generator** in the sidebar.
+Open the panel and choose **Filament Form Generator**. On a default panel the page is `/admin/filament-form-generator`.
 
 ---
 
 ## Configuration
 
-Optional config publish:
-
 ```bash
 php artisan vendor:publish --tag="filament-form-generator-config"
 ```
 
-By default the page is only available in `local` and `testing`:
+The page is limited to `local` and `testing`:
 
 ```php
 // config/filament-form-generator.php
@@ -110,12 +77,54 @@ By default the page is only available in `local` and `testing`:
 ],
 ```
 
-Allow all environments with `['*']`, or gate access in the panel provider:
+Use `['*']` to allow every environment, or authorize in the panel provider:
 
 ```php
 FilamentFormGeneratorPlugin::make()
     ->authorize(fn () => auth()->user()?->isSuperAdmin());
 ```
+
+---
+
+## Planned Pro edition
+
+This package is free while we see whether developers want a fuller builder. Pro would add the pieces that are slow to write by hand:
+
+- Repeater and Builder
+- Wizard, Tabs, and Fieldset
+- File upload, rich editor, markdown, tags, key-value, and color picker
+- Relationship selects
+- Conditional visibility
+
+If you would use those, open a GitHub issue titled **Pro interest** and name the fields you need. The planned price is **$19 once**, after those features exist. A Filament 4 build would be a separate release.
+
+---
+
+## Local development
+
+Point a Laravel app at this checkout:
+
+```json
+"repositories": [
+    {
+        "type": "path",
+        "url": "../filament-form-generator",
+        "options": {
+            "symlink": true
+        }
+    }
+],
+"require": {
+    "akshay/filament-form-generator": "@dev"
+}
+```
+
+```bash
+composer update akshay/filament-form-generator
+php artisan filament:assets
+```
+
+The sibling app `filament-form-generator-demo` is the local preview. Sign in with `preview@example.com` / `password123`, then open `/admin/filament-form-generator`.
 
 ---
 
@@ -129,4 +138,4 @@ php tests/CodeGeneratorTest.php
 
 ## License
 
-MIT
+MIT. See [LICENSE.md](LICENSE.md).

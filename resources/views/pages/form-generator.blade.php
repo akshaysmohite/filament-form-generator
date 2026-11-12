@@ -2,7 +2,7 @@
     <div wire:ignore>
     <div
         x-load
-        x-load-src="{{ \Filament\Support\Facades\FilamentAsset::getAlpineComponentSrc('form-generator', 'akshay/filament-form-generator') }}"
+        x-load-src="{{ \Filament\Support\Facades\FilamentAsset::getAlpineComponentSrc('filament-form-generator', 'akshay/filament-form-generator') }}"
         x-data="formGenerator()"
         x-ref="workspace"
         x-bind:class="{ 'fg-immersive': immersive }"
